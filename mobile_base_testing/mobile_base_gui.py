@@ -112,15 +112,50 @@ class TestWindow(QMainWindow):
         container.setLayout(main_layout)
         self.setCentralWidget(container)
 
-        # Connexions
         self.btn_check_usb.clicked.connect(self.check_usb)
         self.btn_launch_lidar.clicked.connect(self.launch_lidar)
         self.btn_launch_main.clicked.connect(self.launch_main)
         self.btn_teleop.clicked.connect(self.launch_teleop)
 
-        # Processus ROS2
         self.lidar_process = None
         self.main_process = None
+        self.teleop_process = None
+
+    def kill_processes_by_name(self, pattern):
+        """Tue tous les processus dont la commande contient `pattern`."""
+        try:
+            ps_output = subprocess.check_output(["ps", "ax"], universal_newlines=True)
+            lines = ps_output.splitlines()
+
+            pids_to_kill = []
+            for line in lines:
+                if pattern in line:
+                    pid = int(line.split()[0])
+                    pids_to_kill.append(pid)
+
+            for pid in pids_to_kill:
+                try:
+                    os.kill(pid, 9)  # SIGKILL
+                    self.logs.append(f"Processus {pid} tué.")
+                except ProcessLookupError:
+                    pass
+
+        except subprocess.CalledProcessError:
+            print(f"Aucun processus trouvé pour le motif : {pattern}")
+
+    def kill_processes(self):
+        """Tue tous les processus ROS liés à l'application."""
+        self.kill_processes_by_name("lidar")
+        self.kill_processes_by_name("zuuu")
+        self.kill_processes_by_name("teleop_joy")
+
+        self.lidar_process = None
+        self.main_process = None
+        self.teleop_process = None
+
+    def closeEvent(self, event):
+        self.kill_processes()
+        event.accept()
 
     @Slot()
     def check_usb(self):
@@ -149,7 +184,7 @@ class TestWindow(QMainWindow):
     @Slot()
     def launch_lidar(self):
         if self.main_process is not None:
-            self.logs.append("Erreur: Le launch principal est déjà en cours.")
+            print("Erreur: Le launch principal est déjà en cours.")
             return
         self.lidar_process = QProcess()
         self.lidar_process.readyReadStandardOutput.connect(
@@ -162,13 +197,13 @@ class TestWindow(QMainWindow):
     @Slot()
     def launch_main(self):
         if self.lidar_process is not None:
-            self.logs.append("Erreur: Le launch LIDAR est déjà en cours.")
+            print("Erreur: Le launch LIDAR est déjà en cours.")
             return
         self.main_process = QProcess()
         self.main_process.readyReadStandardOutput.connect(
             lambda: self.logs.append(self.main_process.readAllStandardOutput().data().decode())
         )
-        self.main_process.start("ros2", ["launch", "ton_package", "main.launch.py"])
+        self.main_process.start("ros2", ["launch", "zuuu_hal", "hal.launch.py"])
         self.btn_launch_lidar.setEnabled(False)
         self.btn_launch_main.setEnabled(False)
         self.btn_teleop.setEnabled(True)
@@ -176,10 +211,10 @@ class TestWindow(QMainWindow):
     @Slot()
     def launch_teleop(self):
         if self.main_process is None or self.main_process.state() != QProcess.Running:
-            self.logs.append("Erreur: Le launch principal n'est pas actif.")
+            print("Erreur: Le launch principal n'est pas actif.")
             return
-        teleop_process = QProcess()
-        teleop_process.start("ros2", ["run", "ton_package", "teleop_node"])
+        self.teleop_process = QProcess()
+        self.teleop_process.start("ros2", ["run", "zuuu_hal", "teleop_joy"])
 
 if __name__ == "__main__":
     app = QApplication([])
