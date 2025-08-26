@@ -1,5 +1,6 @@
 import os
 import subprocess
+import pygame
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QPushButton,
     QLabel, QTextEdit, QWidget, QHBoxLayout, QGroupBox
@@ -213,10 +214,18 @@ class TestWindow(QMainWindow):
         if self.hal_process is None or self.hal_process.state() != QProcess.Running:
             print("Erreur: Le launch principal n'est pas actif.")
             return
-        print("Lancement de la téléopération...")
+        pygame.init()
+        pygame.joystick.init()
+        if pygame.joystick.get_count() == 0:
+            self.logs.append("Erreur: Aucun joystick détecté.")
+            self.btn_teleop.setToolTip("Aucun joystick détecté. Veuillez connecter un joystick.")
+            pygame.joystick.quit()
+            return
+
+        self.logs.append("Lancement de la téléopération...")
         self.teleop_process = QProcess()
         self.teleop_process.start("ros2", ["run", "zuuu_hal", "teleop_joy"])
-        print("Téléopération lancée.")
+        self.logs.append("Téléopération lancée.")
         self.btn_teleop.setToolTip("La téléopération est en cours d'exécution.")
         self.btn_teleop.setEnabled(False)
 
