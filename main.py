@@ -19,7 +19,7 @@ def main():
         web_launcher.launch('http://localhost:4444') #might be launched on a distant computer?
 
         test = htf.Test(
-            usb_dev.rplidar2_dev,
+            usb_dev.rplidar_s2_dev,
             usb_dev.vesc_dev,
             usb_dev.antennas_dev,
             usb_dev.grippers_dev,
