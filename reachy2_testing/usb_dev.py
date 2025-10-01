@@ -1,10 +1,12 @@
 import os
 import openhtf as htf
 
+# from openhtf.core import base_plugs
 
 
 @htf.measures(
     htf.Measurement("is_rplidar2_dev_exists")
+    .doc("Check if the rplidar2 /dev file exists")
     .equals(True)
 )
 def rplidar2_dev(test):
@@ -17,8 +19,10 @@ def rplidar2_dev(test):
         test.logger.error("/dev/rplidar2 not found!")
         return htf.PhaseResult.FAIL_AND_CONTINUE
 
+
 @htf.measures(
     htf.Measurement("is_vesc_dev_exists")
+    .doc("Check if the vesc /dev file exists")
     .equals(True)
 )
 def vesc_dev(test):
@@ -32,6 +36,7 @@ def vesc_dev(test):
 
 @htf.measures(
     htf.Measurement("is_antennas_dev_exists")
+    .doc("Check if the antennas /dev file exists")
     .equals(True)
 )
 def antennas_dev(test):
@@ -46,6 +51,7 @@ def antennas_dev(test):
 
 @htf.measures(
     htf.Measurement("is_grippers_dev_exists")
+    .doc("Check if the grippers /dev file exists")
     .equals(True)
 )
 def grippers_dev(test):
